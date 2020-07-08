@@ -16,8 +16,6 @@ def parse_args():
 
     parser.add_argument('--input', type=str, default='data/amazon',
                         help='Input dataset path')
-    
-    parser.add_argument('--features', type=str, default=None,
                         help='Input node features')
 
     parser.add_argument('--epoch', type=int, default=100,
@@ -28,7 +26,7 @@ def parse_args():
 
     parser.add_argument('--eval-type', type=str, default='all',
                         help='The edge type(s) for evaluation.')
-    
+
     parser.add_argument('--schema', type=str, default=None,
                         help='The metapath schema (e.g., U-I-U,I-U-I).')
 
@@ -37,7 +35,7 @@ def parse_args():
 
     parser.add_argument('--edge-dim', type=int, default=10,
                         help='Number of edge embedding dimensions. Default is 10.')
-    
+
     parser.add_argument('--att-dim', type=int, default=20,
                         help='Number of attention dimensions. Default is 20.')
 
@@ -49,17 +47,18 @@ def parse_args():
 
     parser.add_argument('--window-size', type=int, default=5,
                         help='Context size for optimization. Default is 5.')
-    
+
     parser.add_argument('--negative-samples', type=int, default=5,
                         help='Negative samples for optimization. Default is 5.')
-    
+
     parser.add_argument('--neighbor-samples', type=int, default=10,
                         help='Neighbor samples for aggregation. Default is 10.')
 
     parser.add_argument('--patience', type=int, default=5,
                         help='Early stopping patience. Default is 5.')
-    
+
     return parser.parse_args()
+
 
 def get_G_from_edges(edges):
     edge_dict = dict()
@@ -77,6 +76,7 @@ def get_G_from_edges(edges):
         tmp_G.add_edge(x, y)
         tmp_G[x][y]['weight'] = weight
     return tmp_G
+
 
 def load_training_data(f_name):
     print('We are loading data from:', f_name)
@@ -119,6 +119,7 @@ def load_testing_data(f_name):
     all_nodes = list(set(all_nodes))
     return true_edge_data_by_type, false_edge_data_by_type
 
+
 def load_node_type(f_name):
     print('We are loading node type from:', f_name)
     node_type = {}
@@ -127,6 +128,7 @@ def load_node_type(f_name):
             items = line.strip().split()
             node_type[items[0]] = items[1]
     return node_type
+
 
 def generate_walks(network_data, num_walks, walk_length, schema, file_name):
     if schema is not None:
@@ -148,6 +150,7 @@ def generate_walks(network_data, num_walks, walk_length, schema, file_name):
 
     return all_walks
 
+
 def generate_pairs(all_walks, vocab, window_size):
     pairs = []
     skip_window = window_size // 2
@@ -160,6 +163,7 @@ def generate_pairs(all_walks, vocab, window_size):
                     if i + j < len(walk):
                         pairs.append((vocab[walk[i]].index, vocab[walk[i + j]].index, layer_id))
     return pairs
+
 
 def generate_vocab(all_walks):
     index2word = []
@@ -178,8 +182,9 @@ def generate_vocab(all_walks):
     index2word.sort(key=lambda word: vocab[word].count, reverse=True)
     for i, word in enumerate(index2word):
         vocab[word].index = i
-    
+
     return vocab, index2word
+
 
 def get_score(local_model, node1, node2):
     try:

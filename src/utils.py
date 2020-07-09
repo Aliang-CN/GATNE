@@ -14,8 +14,10 @@ from walk import RWGraph
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input', type=str, default='data/amazon',
+    parser.add_argument('--input', type=str, default='../data/amazon',
                         help='Input dataset path')
+
+    parser.add_argument('--features', type=str, default='../data/amazon/feature.txt',
                         help='Input node features')
 
     parser.add_argument('--epoch', type=int, default=100,
@@ -63,14 +65,14 @@ def parse_args():
 def get_G_from_edges(edges):
     edge_dict = dict()
     for edge in edges:
-        edge_key = str(edge[0]) + '_' + str(edge[1])
+        edge_key = str(edge[0]) + '_' + str(edge[1])            # 将两个节点之间的边
         if edge_key not in edge_dict:
             edge_dict[edge_key] = 1
         else:
             edge_dict[edge_key] += 1
     tmp_G = nx.Graph()
     for edge_key in edge_dict:
-        weight = edge_dict[edge_key]
+        weight = edge_dict[edge_key]            # 边的权重
         x = edge_key.split('_')[0]
         y = edge_key.split('_')[1]
         tmp_G.add_edge(x, y)
@@ -91,9 +93,9 @@ def load_training_data(f_name):
             edge_data_by_type[words[0]].append((x, y))
             all_nodes.append(x)
             all_nodes.append(y)
-    all_nodes = list(set(all_nodes))
+    all_nodes = list(set(all_nodes))                                # 添加所有的节点
     print('Total training nodes: ' + str(len(all_nodes)))
-    return edge_data_by_type
+    return edge_data_by_type                                        # {“r”：[(h,t)]}
 
 
 def load_testing_data(f_name):
@@ -107,17 +109,17 @@ def load_testing_data(f_name):
             words = line[:-1].split(' ')
             x, y = words[1], words[2]
             if int(words[3]) == 1:
-                if words[0] not in true_edge_data_by_type:
+                if words[0] not in true_edge_data_by_type:                  # 构建正样本数据
                     true_edge_data_by_type[words[0]] = list()
                 true_edge_data_by_type[words[0]].append((x, y))
             else:
-                if words[0] not in false_edge_data_by_type:
+                if words[0] not in false_edge_data_by_type:                 # 构建负样本数据
                     false_edge_data_by_type[words[0]] = list()
                 false_edge_data_by_type[words[0]].append((x, y))
             all_nodes.append(x)
             all_nodes.append(y)
     all_nodes = list(set(all_nodes))
-    return true_edge_data_by_type, false_edge_data_by_type
+    return true_edge_data_by_type, false_edge_data_by_type                  # 正负样本比例按照1：1
 
 
 def load_node_type(f_name):
@@ -155,33 +157,34 @@ def generate_pairs(all_walks, vocab, window_size):
     pairs = []
     skip_window = window_size // 2
     for layer_id, walks in enumerate(all_walks):
-        for walk in walks:
-            for i in range(len(walk)):
+        for walk in walks:                                          # 相当于取一个窗口内的与当前walk之间的关系
+            for i in range(len(walk)):                              # 遍历每个walk
                 for j in range(1, skip_window + 1):
-                    if i - j >= 0:
-                        pairs.append((vocab[walk[i]].index, vocab[walk[i - j]].index, layer_id))
-                    if i + j < len(walk):
+                    if i - j >= 0:                                  # 取i前skip_window个
+                        pairs.append((vocab[walk[i]].index, vocab[walk[i - j]].index, layer_id))            # 词袋的索引
+                    if i + j < len(walk):                           # 取i后skip_window个
                         pairs.append((vocab[walk[i]].index, vocab[walk[i + j]].index, layer_id))
-    return pairs
+    return pairs                                    # 当前walk与窗口内walk的词袋index（walk, nei_walk, layer）
 
 
 def generate_vocab(all_walks):
     index2word = []
     raw_vocab = defaultdict(int)
 
-    for walks in all_walks:
+    for walks in all_walks:                             # 遍历每一层walks
         for walk in walks:
             for word in walk:
-                raw_vocab[word] += 1
+                raw_vocab[word] += 1                    # 统计一下word（node）出现的次数
 
     vocab = {}
-    for word, v in iteritems(raw_vocab):
+    for word, v in iteritems(raw_vocab):                # 构建词袋，给word一个编码，按照出现的次数进行排序
+        print(v)
         vocab[word] = Vocab(count=v, index=len(index2word))
         index2word.append(word)
 
-    index2word.sort(key=lambda word: vocab[word].count, reverse=True)
+    index2word.sort(key=lambda word: vocab[word].count, reverse=True)   # 按照词袋的数量从大到小进行排序
     for i, word in enumerate(index2word):
-        vocab[word].index = i
+        vocab[word].index = i                                           # 词袋的index重新排序
 
     return vocab, index2word
 

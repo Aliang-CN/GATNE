@@ -102,17 +102,17 @@ def train_model(network_data, feature_dic, log_name):
 
         # Input data
         train_inputs = tf.placeholder(tf.int32, shape=[None])               # x node
-        train_labels = tf.placeholder(tf.int32, shape=[None, 1])            # y node
-        train_types = tf.placeholder(tf.int32, shape=[None])                # layer
+        train_labels = tf.placeholder(tf.int32, shape=[None, 1])            # y node    walk之后窗口内的相邻的节点
+        train_types = tf.placeholder(tf.int32, shape=[None])                # layer     边属性
         node_neigh = tf.placeholder(tf.int32, shape=[None, edge_type_count, neighbor_samples])  # x node 对应的neighbor
 
         # Look up embeddings for nodes
-        if feature_dic is not None:
-            node_embed = tf.nn.embedding_lookup(node_features, train_inputs)
-            node_embed = tf.matmul(node_embed, embed_trans)                     # shape=(b, embedding_size)
+        if feature_dic is not None:                                             # 节点有特征就把节点特征压缩到embedding维度上，如果没有就用一个embedding维度向量表示
+            node_embed = tf.nn.embedding_lookup(node_features, train_inputs)    # shape=(b, feature_dim)
+            node_embed = tf.matmul(node_embed, embed_trans)                     # shape=(b, embedding_size) 把节点的属性特征压缩到embedding维度上
         else:
-            node_embed = tf.nn.embedding_lookup(node_embeddings, train_inputs)
-
+            node_embed = tf.nn.embedding_lookup(node_embeddings, train_inputs)  # 如果没有节点特征属性，就直接把节点属性用一个embedding维度的向量来表示
+        #
         if feature_dic is not None:
             node_embed_neighbors = tf.nn.embedding_lookup(node_features, node_neigh)        # shape=(b, edge_type_count, neighbor_samples, feature_dim)
             node_embed_tmp = tf.concat([tf.matmul(

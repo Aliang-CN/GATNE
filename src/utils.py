@@ -178,7 +178,6 @@ def generate_vocab(all_walks):
 
     vocab = {}
     for word, v in iteritems(raw_vocab):                # 构建词袋，给word一个编码，按照出现的次数进行排序
-        print(v)
         vocab[word] = Vocab(count=v, index=len(index2word))
         index2word.append(word)
 

@@ -62,7 +62,7 @@
     <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../dreame_user_to_novel" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
@@ -124,7 +124,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1594190515903</updated>
-      <workItem from="1594190518194" duration="48005000" />
+      <workItem from="1594190518194" duration="50565000" />
     </task>
     <servers />
   </component>
@@ -197,10 +197,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1598" height="786" key="DebuggerActiveHint/0.0.1920.1040@0.0.1920.1040" timestamp="1594352803804" />
-    <state x="476" y="324" key="FileChooserDialogImpl" timestamp="1594190779935">
+    <state x="476" y="324" key="FileChooserDialogImpl" timestamp="1594359980321">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="476" y="324" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1594190779935" />
+    <state x="476" y="324" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1594359980321" />
     <state width="1876" height="210" key="GridCell.Tab.0.bottom" timestamp="1594359461825">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

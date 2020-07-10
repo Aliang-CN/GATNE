@@ -20,9 +20,9 @@ def get_batches(pairs, neighbors, batch_size):
             index = idx * batch_size + i
             if index >= len(pairs):
                 break
-            x.append(pairs[index][0])           # node
-            y.append(pairs[index][1])           # skip_windows对应的node
-            t.append(pairs[index][2])           # layer
+            x.append(pairs[index][0])                       # node
+            y.append(pairs[index][1])                       # skip_windows对应的node
+            t.append(pairs[index][2])                       # layer
             neigh.append(neighbors[pairs[index][0]])        # 把x node对应的neighbors取出来
         yield (np.array(x).astype(np.int32), np.array(y).reshape(-1, 1).astype(np.int32), np.array(t).astype(np.int32),
                np.array(neigh).astype(np.int32))
@@ -30,19 +30,19 @@ def get_batches(pairs, neighbors, batch_size):
 
 def train_model(network_data, feature_dic, log_name):
     all_walks = generate_walks(network_data, args.num_walks, args.walk_length, args.schema, file_name)
-    vocab, index2word = generate_vocab(all_walks)                   # 返回词袋，排序列表
+    vocab, index2word = generate_vocab(all_walks)                                   # 返回词袋，排序列表
     train_pairs = generate_pairs(all_walks, vocab, args.window_size)
 
-    edge_types = list(network_data.keys())                          # 提取边类型
+    edge_types = list(network_data.keys())                                          # 提取边类型
 
-    num_nodes = len(index2word)                                     # 统计节点数
-    edge_type_count = len(edge_types)                               # 统计边数
+    num_nodes = len(index2word)                                                     # 统计节点数
+    edge_type_count = len(edge_types)                                               # 统计边数
     epochs = args.epoch
     batch_size = args.batch_size
-    embedding_size = args.dimensions  # Dimension of the embedding vector.
+    embedding_size = args.dimensions                                                # Dimension of the embedding vector.
     embedding_u_size = args.edge_dim
     u_num = edge_type_count
-    num_sampled = args.negative_samples  # Number of negative examples to sample.
+    num_sampled = args.negative_samples                                             # Number of negative examples to sample.
     dim_a = args.att_dim
     att_head = 1
     neighbor_samples = args.neighbor_samples
@@ -64,7 +64,7 @@ def train_model(network_data, feature_dic, log_name):
             elif len(neighbors[i][r]) > neighbor_samples:
                 neighbors[i][r] = list(np.random.choice(neighbors[i][r], size=neighbor_samples))            # 太多，随机删除
 
-    graph = tf.Graph()                                                                  # 初始化一个图
+    graph = tf.Graph()                                                              # 初始化一个图
 
     if feature_dic is not None:
         feature_dim = len(list(feature_dic.values())[0])
@@ -101,9 +101,9 @@ def train_model(network_data, feature_dic, log_name):
         nce_biases = tf.Variable(tf.zeros([num_nodes]))
 
         # Input data
-        train_inputs = tf.placeholder(tf.int32, shape=[None])               # x node
-        train_labels = tf.placeholder(tf.int32, shape=[None, 1])            # y node    walk之后窗口内的相邻的节点
-        train_types = tf.placeholder(tf.int32, shape=[None])                # layer     边属性
+        train_inputs = tf.placeholder(tf.int32, shape=[None])                   # x node
+        train_labels = tf.placeholder(tf.int32, shape=[None, 1])                # y node    walk之后窗口内的相邻的节点
+        train_types = tf.placeholder(tf.int32, shape=[None])                    # layer     边属性
         node_neigh = tf.placeholder(tf.int32, shape=[None, edge_type_count, neighbor_samples])  # x node 对应的neighbor
 
         # Look up embeddings for nodes
@@ -112,27 +112,27 @@ def train_model(network_data, feature_dic, log_name):
             node_embed = tf.matmul(node_embed, embed_trans)                     # shape=(b, embedding_size) 把节点的属性特征压缩到embedding维度上
         else:
             node_embed = tf.nn.embedding_lookup(node_embeddings, train_inputs)  # 如果没有节点特征属性，就直接把节点属性用一个embedding维度的向量来表示
-        #
+        # 这个相当于base embedding
         if feature_dic is not None:
             node_embed_neighbors = tf.nn.embedding_lookup(node_features, node_neigh)        # shape=(b, edge_type_count, neighbor_samples, feature_dim)
             node_embed_tmp = tf.concat([tf.matmul(
                 tf.reshape(tf.slice(node_embed_neighbors, [0, i, 0, 0], [-1, 1, -1, -1]), [-1, feature_dim]),
                 tf.reshape(tf.slice(u_embed_trans, [i, 0, 0], [1, -1, -1]), [feature_dim, embedding_u_size])) for i in
-                                        range(edge_type_count)], axis=0)                    # shape=(b,neighbor_samples) 这一步是把每个类型的图的向量连接一起
+                                        range(edge_type_count)], axis=0)                    # shape=(edge_type_count*neighbor_sample*b,embedding_u_size) 这一步是把每个类型的图的向量连接一起
             node_type_embed = tf.transpose(
                 tf.reduce_mean(tf.reshape(node_embed_tmp, [edge_type_count, -1, neighbor_samples, embedding_u_size]),
-                               axis=2), perm=[1, 0, 2])                                     # shape=(b, edge_type_count, neighbor_samples)
+                               axis=2), perm=[1, 0, 2])                                     # shape=(b, edge_type_count, embedding_u_size)
         else:
             node_embed_neighbors = tf.nn.embedding_lookup(node_type_embeddings, node_neigh)
             node_embed_tmp = tf.concat([tf.reshape(tf.slice(node_embed_neighbors, [0, i, 0, i, 0], [-1, 1, -1, 1, -1]),
                                                    [1, -1, neighbor_samples, embedding_u_size]) for i in
                                         range(edge_type_count)], axis=0)
             node_type_embed = tf.transpose(tf.reduce_mean(node_embed_tmp, axis=2), perm=[1, 0, 2])
-
+        # 这个相当于edge embedding
         trans_w = tf.nn.embedding_lookup(trans_weights, train_types)                        # shape=(b,embedding_u_size, embedding_size // att_head)
         trans_w_s1 = tf.nn.embedding_lookup(trans_weights_s1, train_types)                  # shape=(b,edge_type_count, embedding_u_size, dim_a)
         trans_w_s2 = tf.nn.embedding_lookup(trans_weights_s2, train_types)                  # shape=(b,edge_type_count, dim_a, att_head)
-
+        # 这一步对edge embedding做一个attention
         attention = tf.reshape(tf.nn.softmax(
             tf.reshape(tf.matmul(tf.tanh(tf.matmul(node_type_embed, trans_w_s1)), trans_w_s2), [-1, u_num])),
                                [-1, att_head, u_num])                                       # shape=(?, att_head, u_num)
@@ -141,7 +141,7 @@ def train_model(network_data, feature_dic, log_name):
 
         if feature_dic is not None:
             node_feat = tf.nn.embedding_lookup(node_features, train_inputs)
-            node_embed = node_embed + tf.matmul(node_feat, feature_weights)
+            node_embed = node_embed + tf.matmul(node_feat, feature_weights)     # 节点embedding+节点特征embedding
 
         last_node_embed = tf.nn.l2_normalize(node_embed, axis=1)
         # 训练词向量
